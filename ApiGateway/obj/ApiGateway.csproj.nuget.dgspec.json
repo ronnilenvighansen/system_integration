@@ -46,6 +46,10 @@
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.5.0, )"
+            },
+            "ocelot": {
+              "target": "Package",
+              "version": "[23.3.6, )"
             }
           },
           "imports": [
