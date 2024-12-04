@@ -1,25 +1,43 @@
+using Microsoft.EntityFrameworkCore;
+using EasyNetQ;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddSingleton<IBus>(sp => CreateBus());
+
+builder.Services.AddDbContext<PostDbContext>(options =>
+    options.UseSqlite("Data Source=PostDb.sqlite"));
+
+builder.Services.AddScoped<UserCreatedSubscriber>();
+
+builder.Services.AddHttpClient<PostController>();
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>(client =>
+{
+    var userServiceUrl = Environment.GetEnvironmentVariable("USER_SERVICE_URL") ?? "http://localhost:5006/api/user/";
+    client.BaseAddress = new Uri(userServiceUrl);
+});
+
+builder.Services.AddHostedService<UserCreatedSubscriberBackgroundService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var dbContext = scope.ServiceProvider.GetRequiredService<PostDbContext>();
+    dbContext.Database.Migrate();
 }
 
-app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.Run();
+
+static IBus CreateBus()
+{
+    var host = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "localhost";
+    return RabbitHutch.CreateBus($"host={host};username=guest;password=guest");
+}

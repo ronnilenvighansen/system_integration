@@ -1,0 +1,70 @@
+services:
+  userservice:
+    build:
+      context: .
+      dockerfile: UserService/Dockerfile
+    command: ["dotnet", "UserService/UserService.dll"]
+    ports:
+      - "5201:80"
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - RABBITMQ_HOST=rabbitmq
+    volumes:
+      - ./UserService/appdata:/app/appdata
+    networks:
+      - backend
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  
+  postservice:
+    build:
+      context: .
+      dockerfile: PostService/Dockerfile
+    command: ["dotnet", "PostService/PostService.dll"]
+    ports:
+      - "5202:80"
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - RABBITMQ_HOST=rabbitmq
+      - USER_SERVICE_URL=http://userservice/api/user/
+      - RabbitMQ__Host=amqp://guest:guest@rabbitmq:5672
+    volumes:
+      - ./PostService/appdata:/app/appdata
+    networks:
+      - backend
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  
+  apigateway:
+    build:
+      context: .
+      dockerfile: ApiGateway/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+    ports:
+      - "5200:80"
+    depends_on:
+      - userservice
+      - postservice
+    networks:
+      - backend
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
