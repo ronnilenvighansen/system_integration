@@ -1,9 +1,9 @@
 using Moq;
 using Microsoft.AspNetCore.Mvc;
-using PostService.Models;
+using Shared.Models;
 using Microsoft.AspNetCore.Identity;
-using PostService.Controllers;
-using UserService.Services;
+using UserService.Controllers;
+using Shared.Services;
 
 namespace UserService.Tests;
 

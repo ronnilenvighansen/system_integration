@@ -1,14 +1,18 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using EasyNetQ;
-using UserService.Services;
+using Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<IBus>(sp => CreateBus());
 
+var sqlitePath = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true"
+    ? "/app/appdata/UserDb.sqlite"  // Path for Docker
+    : "UserDb.sqlite";              // Path for local development
+
 builder.Services.AddDbContext<UserDbContext>(options =>
-    options.UseSqlite("Data Source=UserDb.sqlite"));
+    options.UseSqlite($"Data Source={sqlitePath}"));
 
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<UserDbContext>()

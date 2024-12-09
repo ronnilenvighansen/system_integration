@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PostService.Models;
-using UserService.Services;
+using Shared.Models;
+using Shared.Services;
 
-namespace PostService.Controllers;
+namespace UserService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -52,6 +52,23 @@ public class UserController : ControllerBase
         }
 
         return Ok(new UserIdDto { Id = user.Id });
+    }
+
+    [HttpGet("validate-id/{userId}")]
+    public async Task<IActionResult> ValidateID(string userId)
+    {
+        Console.WriteLine($"Validating ID: {userId}");
+
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user == null)
+        {
+            Console.WriteLine($"ID {userId} not found.");
+            return NotFound("ID not found.");
+        }
+
+        Console.WriteLine($"ID {userId} is valid.");
+        return Ok("ID is valid.");
     }
 
     [HttpGet("byusername/{username}")]
@@ -133,8 +150,22 @@ public class UserController : ControllerBase
         return NoContent();
     }
 
-    public class UserIdDto
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteUser(string id)
     {
-        public string Id { get; set; }
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound("User not found.");
+        }
+
+        var result = await _userManager.DeleteAsync(user);
+        if (!result.Succeeded)
+        {
+            return BadRequest(result.Errors);
+        }
+
+        return NoContent();
     }
+
 }

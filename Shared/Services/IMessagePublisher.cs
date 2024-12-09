@@ -1,6 +1,6 @@
-using PostService.Models;
+using Shared.Models;
 
-namespace UserService.Services;
+namespace Shared.Services;
 
 public interface IMessagePublisher
 {

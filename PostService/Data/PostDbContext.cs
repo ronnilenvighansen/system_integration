@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PostService.Models;
+using Shared.Models;
 
 public class PostDbContext : DbContext
 {

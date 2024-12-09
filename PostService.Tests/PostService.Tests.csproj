@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PostService\PostService.csproj" />
+    <ProjectReference Include="..\UserService\UserService.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-namespace PostService.Models
+namespace Shared.Models
 {
     public class UserCreatedMessage
     {

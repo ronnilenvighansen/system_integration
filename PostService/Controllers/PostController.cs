@@ -1,20 +1,28 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PostService.Services;
+using Shared.Services;
+
+namespace PostService.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
 public class PostController : ControllerBase
 {
+    private readonly IIDValidationService _idValidationService;
     private readonly PostDbContext _context;
     private readonly HttpClient _httpClient;
     private readonly IUserServiceClient _userServiceClient;
+    private readonly IMessagePublisher _messagePublisher;
 
-    public PostController(PostDbContext context, IHttpClientFactory httpClientFactory, IUserServiceClient userServiceClient)
+    public PostController(IIDValidationService idValidationService, PostDbContext context, IHttpClientFactory httpClientFactory, IUserServiceClient userServiceClient, IMessagePublisher messagePublisher)
     {
+        _idValidationService = idValidationService;
         _context = context;
         _httpClient = httpClientFactory.CreateClient();
         _httpClient.BaseAddress = new Uri("http://userservice");
         _userServiceClient = userServiceClient;
+        _messagePublisher = messagePublisher;
     }
 
     [HttpGet]
@@ -34,6 +42,12 @@ public class PostController : ControllerBase
     {   
         try
         {
+            var isValidID = await _idValidationService.ValidateIDAsync(post.UserId);
+            if (!isValidID)
+            {
+                return BadRequest("Invalid ID.");
+            }
+            
             var user = await _userServiceClient.GetUserByIdAsync(post.UserId);
             if (user == null || string.IsNullOrEmpty(user.Id))
             {
@@ -55,6 +69,43 @@ public class PostController : ControllerBase
         }
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdatePost(Guid id, [FromBody] Post updatedPost)
+    {
+        if (id != updatedPost.Id)
+        {
+            return BadRequest("Post ID mismatch.");
+        }
+
+        var existingPost = await _context.Posts.FindAsync(id);
+        if (existingPost == null)
+        {
+            return NotFound("Post not found.");
+        }
+
+        try
+        {
+            // Update the existing post with new values
+            existingPost.Content = updatedPost.Content;
+            existingPost.CreatedAt = DateTime.UtcNow;
+
+            // Save changes to the database
+            _context.Entry(existingPost).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // Return 204 No Content to indicate success
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Handle concurrency issues if needed
+            if (!_context.Posts.Any(p => p.Id == id))
+            {
+                return NotFound("Post no longer exists.");
+            }
+
+            throw;
+        }
+    }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeletePost(Guid id)

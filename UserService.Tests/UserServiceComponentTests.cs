@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using UserService.Services;
+using Shared.Services;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using PostService.Controllers;
-using PostService.Models;
+using UserService.Controllers;
+using Shared.Models;
 
 namespace UserService.Tests
 {

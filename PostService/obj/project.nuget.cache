@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "jiKORv1RgBU=",
+  "dgSpecHash": "fzaKdLHWQC0=",
   "success": true,
   "projectFilePath": "/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/PostService/PostService.csproj",
   "expectedPackageFiles": [
@@ -27,6 +27,7 @@
     "/Users/ronnihansen/.nuget/packages/microsoft.extensions.primitives/6.0.0/microsoft.extensions.primitives.6.0.0.nupkg.sha512",
     "/Users/ronnihansen/.nuget/packages/microsoft.openapi/1.2.3/microsoft.openapi.1.2.3.nupkg.sha512",
     "/Users/ronnihansen/.nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg.sha512",
+    "/Users/ronnihansen/.nuget/packages/polly/7.2.2/polly.7.2.2.nupkg.sha512",
     "/Users/ronnihansen/.nuget/packages/rabbitmq.client/6.8.1/rabbitmq.client.6.8.1.nupkg.sha512",
     "/Users/ronnihansen/.nuget/packages/sqlitepclraw.bundle_e_sqlite3/2.1.2/sqlitepclraw.bundle_e_sqlite3.2.1.2.nupkg.sha512",
     "/Users/ronnihansen/.nuget/packages/sqlitepclraw.core/2.1.2/sqlitepclraw.core.2.1.2.nupkg.sha512",

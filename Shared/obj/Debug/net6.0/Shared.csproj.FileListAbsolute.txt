@@ -1,0 +1,13 @@
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/bin/Debug/net6.0/Shared.deps.json
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/bin/Debug/net6.0/Shared.dll
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/bin/Debug/net6.0/Shared.pdb
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/obj/Debug/net6.0/Shared.csproj.AssemblyReference.cache
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/obj/Debug/net6.0/Shared.GeneratedMSBuildEditorConfig.editorconfig
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/obj/Debug/net6.0/Shared.AssemblyInfoInputs.cache
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/obj/Debug/net6.0/Shared.AssemblyInfo.cs
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/obj/Debug/net6.0/Shared.csproj.CoreCompileInputs.cache
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/obj/Debug/net6.0/Shared.sourcelink.json
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/obj/Debug/net6.0/Shared.dll
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/obj/Debug/net6.0/refint/Shared.dll
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/obj/Debug/net6.0/Shared.pdb
+/Users/ronnihansen/Desktop/softwareudvikling/system_integration/opgaver/compulsory_assignment/Shared/obj/Debug/net6.0/ref/Shared.dll

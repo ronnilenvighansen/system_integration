@@ -7,7 +7,7 @@ public class PostDbContextFactory : IDesignTimeDbContextFactory<PostDbContext>
     {
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.PostService.json", optional: false)
+            .AddJsonFile("appsettings.json", optional: false)
             .AddEnvironmentVariables()
             .Build();
 

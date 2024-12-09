@@ -1,7 +1,7 @@
 using EasyNetQ;
-using PostService.Models;
+using Shared.Models;
 
-namespace UserService.Services;
+namespace Shared.Services;
 
 public class MessagePublisher : IMessagePublisher
 {

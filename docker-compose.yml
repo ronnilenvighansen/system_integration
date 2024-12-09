@@ -27,7 +27,7 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:80
       - RABBITMQ_HOST=rabbitmq
-      - USER_SERVICE_URL=http://userservice/api/user/
+      - UserService__BaseAddress=http://userservice/api/user/
       - RabbitMQ__Host=amqp://guest:guest@rabbitmq:5672
     volumes:
       - ./PostService/appdata:/app/appdata
@@ -68,3 +68,14 @@ services:
 networks:
   backend:
     driver: bridge
+
+volumes:
+  - name: appdata
+    hostPath:
+      path: ./UserService/appdata
+      type: Directory
+      
+volumeMounts:
+  - name: appdata
+    mountPath: /app/appdata
+
