@@ -10,6 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IIDValidationService, IDValidationService>();
 
+builder.Services.AddTransient<PolicyHandler>();
+
 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 
 builder.Services.AddDbContext<PostDbContext>(options =>
@@ -67,8 +69,6 @@ var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSecond
 var combinedPolicy = Policy.WrapAsync(retryPolicy, timeoutPolicy);
 
 builder.Services.AddSingleton<IAsyncPolicy<HttpResponseMessage>>(combinedPolicy);
-
-builder.Services.AddSingleton<PolicyHandler>();
 
 builder.Services.AddSingleton<IBus>(sp =>
 {

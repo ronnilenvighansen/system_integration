@@ -24,24 +24,19 @@ spec:
           value: "guest"  # Set default password (you can change it)
         ports:
         - containerPort: 5672  # RabbitMQ AMQP protocol
-        - containerPort: 15672  # RabbitMQ management console (optional)
 
 ---
-# RabbitMQ Service
 apiVersion: v1
 kind: Service
 metadata:
   name: rabbitmq
-  namespace: default
 spec:
+  ports:
+    - name: http
+      port: 5672
+      targetPort: 5672
   selector:
     app: rabbitmq
-  ports:
-    - port: 5672  # AMQP protocol port
-      targetPort: 5672
-    - port: 15672  # Management console (optional)
-      targetPort: 15672
-  clusterIP: None  # Headless service for internal communication
 
 ---
 # PersistentVolumeClaim for MySQL storage
@@ -133,14 +128,13 @@ spec:
         - containerPort: 80
         env:
         - name: ASPNETCORE_ENVIRONMENT
-          value: "Kubernetes"  # Specify the environment as Kubernetes
+          value: "Kubernetes" 
         - name: ConnectionStrings__KubernetesConnection
-          value: "Server=userdb.default.svc.cluster.local;Database=userdb;User=root;Password=password"  # Your Kubernetes MySQL connection string
-        - name: RABBITMQ_HOST
-          value: "rabbitmq"  # RabbitMQ host if needed
+          value: "Server=userdb.default.svc.cluster.local;Database=userdb;User=root;Password=password" 
+        - name: RabbitMQ__KubernetesConnection
+          value: "host=rabbitmq;username=guest;password=guest"
 
 ---
-# Userservice Service and Pod Configuration
 apiVersion: v1
 kind: Service
 metadata:
@@ -165,7 +159,7 @@ spec:
     app: postservice
   ports:
     - port: 80
-      nodePort: 30001
+      nodePort: 30002
 ---
 
 apiVersion: apps/v1
@@ -193,11 +187,13 @@ spec:
         - containerPort: 80
         env:
         - name: ASPNETCORE_ENVIRONMENT
-          value: "Kubernetes"  # Specify the environment as Kubernetes
+          value: "Kubernetes"
         - name: ConnectionStrings__KubernetesConnection
-          value: "Server=postdb.default.svc.cluster.local;Database=postdb;User=root;Password=password"  # Your Kubernetes MySQL connection string
-        - name: RABBITMQ_HOST
-          value: "rabbitmq"  # RabbitMQ host if needed
+          value: "Server=postdb.default.svc.cluster.local;Database=postdb;User=root;Password=password"  
+        - name: RabbitMQ__KubernetesConnection
+          value: "host=rabbitmq;username=guest;password=guest"
+        - name: BaseAddresses__KubernetesBaseAddress
+          value: "http://userservice/api/user/"
 ---
 # PersistentVolumeClaim for MySQL storage
 apiVersion: v1
