@@ -12,16 +12,14 @@ public class PostController : ControllerBase
     private readonly IIDValidationService _idValidationService;
     private readonly PostDbContext _context;
     private readonly HttpClient _httpClient;
-    private readonly IUserServiceClient _userServiceClient;
     private readonly IMessagePublisher _messagePublisher;
 
-    public PostController(IIDValidationService idValidationService, PostDbContext context, IHttpClientFactory httpClientFactory, IUserServiceClient userServiceClient, IMessagePublisher messagePublisher)
+    public PostController(IIDValidationService idValidationService, PostDbContext context, IHttpClientFactory httpClientFactory, IMessagePublisher messagePublisher)
     {
         _idValidationService = idValidationService;
         _context = context;
         _httpClient = httpClientFactory.CreateClient();
         _httpClient.BaseAddress = new Uri("http://userservice");
-        _userServiceClient = userServiceClient;
         _messagePublisher = messagePublisher;
     }
 
@@ -47,16 +45,8 @@ public class PostController : ControllerBase
             {
                 return BadRequest("Invalid ID.");
             }
-            
-            var user = await _userServiceClient.GetUserByIdAsync(post.UserId);
-            if (user == null || string.IsNullOrEmpty(user.Id))
-            {
-                return BadRequest("Invalid or non-existent user.");
-            }
 
-            post.UserId = user.Id;
             post.CreatedAt = DateTime.UtcNow;
-
             _context.Posts.Add(post);
             await _context.SaveChangesAsync();
 

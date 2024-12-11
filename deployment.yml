@@ -1,0 +1,262 @@
+# RabbitMQ Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  namespace: default
+spec:
+  replicas: 1  # You can increase the replica count based on your needs
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3-management  # Official RabbitMQ image with management plugin
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          value: "guest"  # Set default username (you can change it)
+        - name: RABBITMQ_DEFAULT_PASS
+          value: "guest"  # Set default password (you can change it)
+        ports:
+        - containerPort: 5672  # RabbitMQ AMQP protocol
+        - containerPort: 15672  # RabbitMQ management console (optional)
+
+---
+# RabbitMQ Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: default
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+    - port: 5672  # AMQP protocol port
+      targetPort: 5672
+    - port: 15672  # Management console (optional)
+      targetPort: 15672
+  clusterIP: None  # Headless service for internal communication
+
+---
+# PersistentVolumeClaim for MySQL storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: userdb-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  # Adjust the size based on your requirements
+
+---
+# MySQL Deployment and Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userdb
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: userdb
+  template:
+    metadata:
+      labels:
+        app: userdb
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "password"  # Change this to a strong password
+        - name: MYSQL_DATABASE
+          value: "userdb"  # Database name
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: userdb-storage
+          mountPath: /var/lib/mysql
+      volumes:
+        - name: userdb-storage
+          persistentVolumeClaim:
+            claimName: userdb-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: userdb
+  namespace: default
+spec:
+  selector:
+    app: userdb
+  ports:
+    - port: 3306
+      targetPort: 3306
+  clusterIP: None  # Headless service for internal communication
+
+---
+# Userservice Deployment and Configuration
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userservice
+  namespace: default
+  labels:
+    app: userservice
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: userservice
+  template:
+    metadata:
+      labels:
+        app: userservice
+    spec:
+      containers:
+      - name: userservice
+        image: compulsory_assignment_example/userservice
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Kubernetes"  # Specify the environment as Kubernetes
+        - name: ConnectionStrings__KubernetesConnection
+          value: "Server=userdb.default.svc.cluster.local;Database=userdb;User=root;Password=password"  # Your Kubernetes MySQL connection string
+        - name: RABBITMQ_HOST
+          value: "rabbitmq"  # RabbitMQ host if needed
+
+---
+# Userservice Service and Pod Configuration
+apiVersion: v1
+kind: Service
+metadata:
+  name: userservice
+  namespace: default
+spec:
+  type: NodePort
+  selector:
+    app: userservice
+  ports:
+    - port: 80
+      nodePort: 30001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postservice
+  namespace: default
+spec:
+  type: NodePort
+  selector:
+    app: postservice
+  ports:
+    - port: 80
+      nodePort: 30001
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postservice
+  namespace: default
+  labels:
+    app: postservice
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: postservice
+  template:
+    metadata:
+      labels:
+        app: postservice
+    spec:
+      containers:
+      - name: postservice
+        image: compulsory_assignment_example/postservice
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Kubernetes"  # Specify the environment as Kubernetes
+        - name: ConnectionStrings__KubernetesConnection
+          value: "Server=postdb.default.svc.cluster.local;Database=postdb;User=root;Password=password"  # Your Kubernetes MySQL connection string
+        - name: RABBITMQ_HOST
+          value: "rabbitmq"  # RabbitMQ host if needed
+---
+# PersistentVolumeClaim for MySQL storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postdb-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  # Adjust the size based on your requirements
+
+---
+# MySQL Deployment and Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postdb
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postdb
+  template:
+    metadata:
+      labels:
+        app: postdb
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "password"  # Change this to a strong password
+        - name: MYSQL_DATABASE
+          value: "postdb"  # Database name
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: postdb-storage
+          mountPath: /var/lib/mysql
+      volumes:
+        - name: postdb-storage
+          persistentVolumeClaim:
+            claimName: postdb-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postdb
+  namespace: default
+spec:
+  selector:
+    app: postdb
+  ports:
+    - port: 3306
+      targetPort: 3306
+  clusterIP: None  # Headless service for internal communication

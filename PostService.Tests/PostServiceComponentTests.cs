@@ -11,7 +11,6 @@ namespace PostService.Tests
     {
         private readonly Mock<IIDValidationService> _mockIdValidationService;
         private readonly Mock<IHttpClientFactory> _mockHttpClientFactory;
-        private readonly Mock<IUserServiceClient> _mockUserServiceClient;
         private readonly Mock<IMessagePublisher> _mockMessagePublisher;
         private readonly PostController _postController;
         private readonly PostDbContext _context;
@@ -20,7 +19,6 @@ namespace PostService.Tests
         {
             _mockIdValidationService = new Mock<IIDValidationService>();
             _mockHttpClientFactory = new Mock<IHttpClientFactory>();
-            _mockUserServiceClient = new Mock<IUserServiceClient>();
             _mockMessagePublisher = new Mock<IMessagePublisher>();
 
             // In-memory database for testing
@@ -44,7 +42,6 @@ namespace PostService.Tests
                 _mockIdValidationService.Object,
                 _context, 
                 _mockHttpClientFactory.Object, 
-                _mockUserServiceClient.Object, 
                 _mockMessagePublisher.Object
             );
         }

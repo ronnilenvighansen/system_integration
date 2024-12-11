@@ -8,13 +8,49 @@ using System.Net.Sockets;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var baseAddress = builder.Configuration["UserService:BaseAddress"];
+builder.Services.AddScoped<IIDValidationService, IDValidationService>();
+
+var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+
+builder.Services.AddDbContext<PostDbContext>(options =>
+{
+    var connectionString = environment switch
+    {
+        "Development" => builder.Configuration.GetConnectionString("DevelopmentConnection"),
+        "Docker" => builder.Configuration.GetConnectionString("DockerConnection"),
+        "Kubernetes" => builder.Configuration.GetConnectionString("KubernetesConnection"),
+        _ => throw new Exception("No valid environment detected")
+    };
+
+    options.UseMySql(
+        connectionString,
+        new MySqlServerVersion(new Version(8, 0, 0)),
+        mySqlOptions => mySqlOptions.EnableRetryOnFailure()
+    );
+});
+
+builder.Services.AddHttpClient<IIDValidationService, IDValidationService>((provider, client) =>
+{
+    var configuration = provider.GetRequiredService<IConfiguration>();
+
+    var baseAddress = environment switch
+    {
+        "Development" => configuration["BaseAddresses:DevelopmentBaseAddress"],
+        "Docker" => configuration["BaseAddresses:DockerBaseAddress"],
+        "Kubernetes" => configuration["BaseAddresses:KubernetesBaseAddress"],
+        _ => throw new Exception("No valid environment detected")
+    };
+
+    Console.WriteLine($"Configuring HttpClient in AddHttpClient with BaseAddress: {baseAddress}");
+    client.BaseAddress = new Uri(baseAddress);
+}).AddHttpMessageHandler<PolicyHandler>();
+
 
 var retryPolicy = Policy
-    .Handle<HttpRequestException>() // For general HTTP request failures
-    .Or<SocketException>()          // For DNS-related issues
-    .OrInner<SocketException>()     // Handle inner exceptions for wrapped errors
-    .OrResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode) // Retry for non-successful responses
+    .Handle<HttpRequestException>()
+    .Or<SocketException>()
+    .OrInner<SocketException>()
+    .OrResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
     .RetryAsync(3, onRetry: (outcome, retryNumber, context) =>
     {
         if (outcome.Exception != null)
@@ -32,22 +68,13 @@ var combinedPolicy = Policy.WrapAsync(retryPolicy, timeoutPolicy);
 
 builder.Services.AddSingleton<IAsyncPolicy<HttpResponseMessage>>(combinedPolicy);
 
-builder.Services.AddHttpClient<IDValidationService>(client =>
-{
-    client.BaseAddress = new Uri(baseAddress);
-})
-.AddHttpMessageHandler<PolicyHandler>();
-
 builder.Services.AddSingleton<PolicyHandler>();
 
-builder.Services.AddSingleton<IBus>(sp => CreateBus());
-
-var sqlitePath = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true"
-    ? "/app/appdata/PostDb.sqlite"  // Path for Docker
-    : "PostDb.sqlite";              // Path for local development
-
-builder.Services.AddDbContext<PostDbContext>(options =>
-    options.UseSqlite($"Data Source={sqlitePath}"));
+builder.Services.AddSingleton<IBus>(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>(); // Get the configuration
+    return CreateBus(configuration); // Pass the configuration to CreateBus
+});
 
 builder.Services.AddScoped<PostDbContext>();
 
@@ -58,11 +85,6 @@ builder.Services.AddHttpClient<PostController>();
 builder.Services.AddControllers();
 
 builder.Services.AddScoped<IMessagePublisher, MessagePublisher>();
-
-builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>(client =>
-{
-    client.BaseAddress = new Uri(baseAddress);
-});
 
 builder.Services.AddHostedService<UserCreatedSubscriberBackgroundService>();
 
@@ -87,8 +109,19 @@ app.Lifetime.ApplicationStopping.Register(() =>
 
 app.Run();
 
-static IBus CreateBus()
+static IBus CreateBus(IConfiguration configuration)
 {
-    var host = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "localhost";
-    return RabbitHutch.CreateBus($"host={host};username=guest;password=guest");
+    var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+
+    var rabbitMqConnection = environment switch
+    {
+        "Development" => configuration["RabbitMQ:DevelopmentConnection"],
+        "Docker" => configuration["RabbitMQ:DockerConnection"],
+        "Kubernetes" => configuration["RabbitMQ:KubernetesConnection"],
+        _ => throw new Exception("No valid environment detected")
+    };
+
+    Console.WriteLine($"Using RabbitMQ Connection String: {rabbitMqConnection}");
+
+    return RabbitHutch.CreateBus(rabbitMqConnection);
 }

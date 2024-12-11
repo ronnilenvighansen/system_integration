@@ -19,6 +19,8 @@ namespace PostService.Services
             try
             {
                 // Execute the request with the policy
+                Console.WriteLine($"Making request to {_httpClient.BaseAddress}validate-id/{userId}");
+
                 var response = await _policy.ExecuteAsync(() =>
                     _httpClient.GetAsync($"validate-id/{userId}"));
 
@@ -42,6 +44,5 @@ namespace PostService.Services
                 return false;
             }
         }
-
     }
 }

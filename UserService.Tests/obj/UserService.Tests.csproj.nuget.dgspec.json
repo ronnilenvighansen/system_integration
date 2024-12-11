@@ -229,13 +229,13 @@
               "target": "Package",
               "version": "[6.0.35, )"
             },
-            "MicroSoft.EntityFrameworkCore.Sqlite": {
-              "target": "Package",
-              "version": "[6.0.35, )"
-            },
             "Newtonsoft.Json": {
               "target": "Package",
               "version": "[13.0.3, )"
+            },
+            "Pomelo.EntityFrameworkCore.MySql": {
+              "target": "Package",
+              "version": "[6.0.3, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
