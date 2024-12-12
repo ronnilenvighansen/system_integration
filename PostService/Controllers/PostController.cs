@@ -75,19 +75,16 @@ public class PostController : ControllerBase
 
         try
         {
-            // Update the existing post with new values
             existingPost.Content = updatedPost.Content;
             existingPost.CreatedAt = DateTime.UtcNow;
 
-            // Save changes to the database
             _context.Entry(existingPost).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
-            return NoContent(); // Return 204 No Content to indicate success
+            return NoContent(); 
         }
         catch (DbUpdateConcurrencyException)
         {
-            // Handle concurrency issues if needed
             if (!_context.Posts.Any(p => p.Id == id))
             {
                 return NotFound("Post no longer exists.");

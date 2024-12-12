@@ -21,13 +21,11 @@ namespace PostService.Tests
             _mockHttpClientFactory = new Mock<IHttpClientFactory>();
             _mockMessagePublisher = new Mock<IMessagePublisher>();
 
-            // In-memory database for testing
             var options = new DbContextOptionsBuilder<PostDbContext>()
                 .UseInMemoryDatabase("TestDb")
                 .Options;
             _context = new PostDbContext(options);
 
-            // Create HttpClient for the controller
             var httpClient = new HttpClient
             {
                 BaseAddress = new Uri("http://userservice")
@@ -36,8 +34,6 @@ namespace PostService.Tests
             .Setup(f => f.CreateClient(It.IsAny<string>()))
             .Returns(httpClient);
 
-
-            // Instantiate the controller
             _postController = new PostController(
                 _mockIdValidationService.Object,
                 _context, 

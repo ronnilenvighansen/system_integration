@@ -9,6 +9,8 @@ services:
       - ConnectionStrings__DockerConnection=Server=userdb;Database=userdb;User=root;Password=password
       - ASPNETCORE_URLS=http://+:80
       - RabbitMQ__DockerConnection=host=rabbitmq;username=guest;password=guest
+      - Settings__JwtIssuer=acme.corp.com
+      - Settings__JwtKey=supersecret
     networks:
       - backend
     depends_on:
@@ -47,6 +49,16 @@ services:
     depends_on:
       - userservice
       - postservice
+      - authenticationservice
+    networks:
+      - backend
+
+  authenticationservice:
+    build:
+      context: .
+      dockerfile: AuthenticationService/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
     networks:
       - backend
 

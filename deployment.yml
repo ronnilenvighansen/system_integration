@@ -1,11 +1,10 @@
-# RabbitMQ Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: rabbitmq
   namespace: default
 spec:
-  replicas: 1  # You can increase the replica count based on your needs
+  replicas: 1 
   selector:
     matchLabels:
       app: rabbitmq
@@ -16,14 +15,14 @@ spec:
     spec:
       containers:
       - name: rabbitmq
-        image: rabbitmq:3-management  # Official RabbitMQ image with management plugin
+        image: rabbitmq:3-management  
         env:
         - name: RABBITMQ_DEFAULT_USER
-          value: "guest"  # Set default username (you can change it)
+          value: "guest" 
         - name: RABBITMQ_DEFAULT_PASS
-          value: "guest"  # Set default password (you can change it)
+          value: "guest" 
         ports:
-        - containerPort: 5672  # RabbitMQ AMQP protocol
+        - containerPort: 5672  
 
 ---
 apiVersion: v1
@@ -39,7 +38,6 @@ spec:
     app: rabbitmq
 
 ---
-# PersistentVolumeClaim for MySQL storage
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -50,10 +48,9 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi  # Adjust the size based on your requirements
+      storage: 1Gi  
 
 ---
-# MySQL Deployment and Service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -74,9 +71,9 @@ spec:
         image: mysql:8.0
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "password"  # Change this to a strong password
+          value: "password"  
         - name: MYSQL_DATABASE
-          value: "userdb"  # Database name
+          value: "userdb"  
         ports:
         - containerPort: 3306
         volumeMounts:
@@ -99,10 +96,9 @@ spec:
   ports:
     - port: 3306
       targetPort: 3306
-  clusterIP: None  # Headless service for internal communication
+  clusterIP: None  
 
 ---
-# Userservice Deployment and Configuration
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -195,7 +191,6 @@ spec:
         - name: BaseAddresses__KubernetesBaseAddress
           value: "http://userservice/api/user/"
 ---
-# PersistentVolumeClaim for MySQL storage
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -206,10 +201,9 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi  # Adjust the size based on your requirements
+      storage: 1Gi 
 
 ---
-# MySQL Deployment and Service
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -230,9 +224,9 @@ spec:
         image: mysql:8.0
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "password"  # Change this to a strong password
+          value: "password" 
         - name: MYSQL_DATABASE
-          value: "postdb"  # Database name
+          value: "postdb" 
         ports:
         - containerPort: 3306
         volumeMounts:
@@ -255,4 +249,4 @@ spec:
   ports:
     - port: 3306
       targetPort: 3306
-  clusterIP: None  # Headless service for internal communication
+  clusterIP: None  

@@ -14,7 +14,6 @@ public class UserCreatedSubscriber
 
     public void Start()
     {
-        // Subscribe to the event, make sure scope creation happens here
         _bus.PubSub.Subscribe<UserCreatedMessage>("post_service_subscription", async message =>
         {
             using (var scope = _serviceProvider.CreateScope())
@@ -25,7 +24,6 @@ public class UserCreatedSubscriber
                 {
                     Console.WriteLine($"User created: {message.UserId}, {message.UserName}, {message.Email}");
 
-                    // Save the message and user to the database
                     context.UserCreatedMessages.Add(message);
                     await context.SaveChangesAsync();
 
@@ -50,7 +48,6 @@ public class UserCreatedSubscriber
                     context.ProcessingSuccessMessages.Add(successMessage);
                     await context.SaveChangesAsync();
 
-                    // Publish success message to the bus
                     await _bus.PubSub.PublishAsync(successMessage);
 
                     Console.WriteLine($"{message.UserId}, {message.UserName}, {successMessage.ProcessedAt}, {successMessage.StatusMessage}");

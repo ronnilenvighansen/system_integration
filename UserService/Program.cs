@@ -5,13 +5,13 @@ using Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+
 builder.Services.AddSingleton<IBus>(sp =>
 {
-    var configuration = sp.GetRequiredService<IConfiguration>(); // Get the configuration
-    return CreateBus(configuration); // Pass the configuration to CreateBus
+    var configuration = sp.GetRequiredService<IConfiguration>(); 
+    return CreateBus(configuration); 
 });
-
-string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 
 builder.Services.AddDbContext<UserDbContext>(options =>
 {
@@ -30,11 +30,15 @@ builder.Services.AddDbContext<UserDbContext>(options =>
     );
 });
 
+
+
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<UserDbContext>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddControllers();
+
+builder.Services.AddScoped<UserCommandHandler>();
 
 builder.Services.AddScoped<IMessagePublisher, MessagePublisher>();
 
@@ -61,7 +65,6 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"An error occurred while applying migrations: {ex.Message}");
     }
 }
-
 
 app.UseAuthentication();
 app.UseAuthorization();

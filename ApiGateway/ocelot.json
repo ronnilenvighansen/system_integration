@@ -12,6 +12,12 @@
             "Port": 80
           }
         ],
+        "AuthenticationOptions": {
+          "AuthenticationProviderKey": "Bearer",
+          "AllowedScopes": [
+            "user.all"
+          ]
+      },
         "UpstreamPathTemplate": "/users/{everything}",
         "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ]
       },
@@ -24,8 +30,26 @@
             "Port": 80
           }
         ],
+        "AuthenticationOptions": {
+          "AuthenticationProviderKey": "Bearer",
+          "AllowedScopes": [
+            "post.all"
+          ]
+      },
         "UpstreamPathTemplate": "/posts/{everything}",
         "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ]
+      },
+      {
+        "DownstreamPathTemplate": "/api/authentication/{everything}",
+        "DownstreamScheme": "http",
+        "DownstreamHostAndPorts": [
+          {
+            "Host": "authenticationservice",
+            "Port": 80
+          }
+        ],
+        "UpstreamPathTemplate": "/authentication/{everything}",
+        "UpstreamHttpMethod": [ "Post" ]
       }
     ]
   }

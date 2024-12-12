@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Shared.Models;
 using Shared.Services;
+using UserService.Commands;
 
 namespace UserService.Controllers;
 
@@ -12,17 +13,30 @@ public class UserController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
     private readonly IMessagePublisher _messagePublisher;
+    private readonly UserCommandHandler _commandHandler;
 
-    public UserController(UserManager<User> userManager, IMessagePublisher messagePublisher)
+
+    public UserController(UserManager<User> userManager, IMessagePublisher messagePublisher, UserCommandHandler commandHandler)
     {
         _userManager = userManager;
         _messagePublisher = messagePublisher;
+        _commandHandler = commandHandler;
+
+        
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+    public async Task<ActionResult<IEnumerable<UserReadModel>>> GetUsers()
     {
-        return await _userManager.Users.ToListAsync();
+        var users = await _userManager.Users.Select(u => new UserReadModel
+        {
+            Id = u.Id,
+            UserName = u.UserName,
+            Email = u.Email,
+            FullName = u.FullName
+        }).ToListAsync();
+
+        return Ok(users);
     }
 
     [HttpGet("health")]
@@ -42,18 +56,6 @@ public class UserController : ControllerBase
         return Ok(user);
     }
 
-    [HttpGet("byid/{userId}")]
-    public async Task<IActionResult> GetUser(string userId)
-    {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
-        {
-            return NotFound();
-        }
-
-        return Ok(new UserIdDto { Id = user.Id });
-    }
-
     [HttpGet("validate-id/{userId}")]
     public async Task<IActionResult> ValidateID(string userId)
     {
@@ -71,19 +73,7 @@ public class UserController : ControllerBase
         return Ok("ID is valid.");
     }
 
-    [HttpGet("byusername/{username}")]
-    public async Task<IActionResult> GetUserId(string username)
-    {
-        var user = await _userManager.FindByNameAsync(username);
-        if (user == null)
-        {
-            return NotFound("User not found.");
-        }
-
-        return Ok(new { Id = user.Id});
-    }
-
-    [HttpPost("register")]
+    [HttpPost]
     public async Task<IActionResult> Register([FromBody] RegisterModel registerModel)
     {
         var user = new User
@@ -92,9 +82,13 @@ public class UserController : ControllerBase
             Email = registerModel.Email,
             FullName = registerModel.FullName
         };
-
         var result = await _userManager.CreateAsync(user, registerModel.Password);
-
+        var command = new CreateUserCommand
+        {
+            UserName = registerModel.UserName,
+            Email = registerModel.Email,
+            FullName = registerModel.FullName
+        };
         if (result.Succeeded)
         {
             var userCreatedMessage = new UserCreatedMessage
@@ -104,6 +98,7 @@ public class UserController : ControllerBase
                 Email = user.Email
             };
             await _messagePublisher.PublishUserCreatedMessage(userCreatedMessage);
+            await _commandHandler.Handle(command);
 
             return Ok(user);
         }
@@ -131,6 +126,7 @@ public class UserController : ControllerBase
         {
             return NotFound("User not found.");
         }
+    
 
         if (!string.IsNullOrEmpty(updateRequest.FullName))
         {
@@ -151,7 +147,7 @@ public class UserController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteUser(string id)
+    public async Task<IActionResult> DeleteUser(string id, DeleteUserCommand command)
     {
         var user = await _userManager.FindByIdAsync(id);
         if (user == null)
@@ -165,7 +161,13 @@ public class UserController : ControllerBase
             return BadRequest(result.Errors);
         }
 
+        var userDeletedMessage = new UserDeletedMessage
+        {
+            UserId = user.Id,
+            UserName = user.UserName
+        };
+        await _messagePublisher.PublishUserDeletedMessage(userDeletedMessage);
+        await _commandHandler.Handle(command);
         return NoContent();
     }
-
 }

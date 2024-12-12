@@ -5,6 +5,7 @@ using Shared.Services;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using UserService.Controllers;
 using Shared.Models;
+using UserService.Commands;
 
 namespace UserService.Tests
 {
@@ -14,6 +15,8 @@ namespace UserService.Tests
         private readonly UserManager<User> _userManager;
         private readonly IMessagePublisher _messagePublisher;
         private readonly UserController _userController;
+        private readonly UserCommandHandler _commandHandler;
+
 
         public UserServiceComponentTests()
         {
@@ -28,7 +31,9 @@ namespace UserService.Tests
 
             _messagePublisher = new MockMessagePublisher();
 
-            _userController = new UserController(_userManager, _messagePublisher);
+            _commandHandler = new UserCommandHandler(_dbContext, _messagePublisher);
+
+            _userController = new UserController(_userManager, _messagePublisher, _commandHandler);
         }
 
         [Fact]
@@ -57,17 +62,6 @@ namespace UserService.Tests
 
             Assert.True(((MockMessagePublisher)_messagePublisher).MessagePublished);
         }
-
-        [Fact]
-        public async Task GetUserById_ReturnsNotFound_WhenUserDoesNotExist()
-        {
-            // Act
-            var result = await _userController.GetUser("nonExistentUserId");
-
-            // Assert
-            var notFoundResult = Assert.IsType<NotFoundResult>(result);
-            Assert.Equal(404, notFoundResult.StatusCode);
-        }
     }
 
     public class MockMessagePublisher : IMessagePublisher
@@ -78,6 +72,9 @@ namespace UserService.Tests
         {
             MessagePublished = true;
             return Task.CompletedTask;
+        }
+        public async Task PublishUserDeletedMessage(UserDeletedMessage message)
+        {
         }
     }
 }

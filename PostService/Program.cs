@@ -31,6 +31,7 @@ builder.Services.AddDbContext<PostDbContext>(options =>
     );
 });
 
+
 builder.Services.AddHttpClient<IIDValidationService, IDValidationService>((provider, client) =>
 {
     var configuration = provider.GetRequiredService<IConfiguration>();
@@ -45,7 +46,9 @@ builder.Services.AddHttpClient<IIDValidationService, IDValidationService>((provi
 
     Console.WriteLine($"Configuring HttpClient in AddHttpClient with BaseAddress: {baseAddress}");
     client.BaseAddress = new Uri(baseAddress);
-}).AddHttpMessageHandler<PolicyHandler>();
+
+})
+.AddHttpMessageHandler<PolicyHandler>();
 
 
 var retryPolicy = Policy
@@ -72,8 +75,8 @@ builder.Services.AddSingleton<IAsyncPolicy<HttpResponseMessage>>(combinedPolicy)
 
 builder.Services.AddSingleton<IBus>(sp =>
 {
-    var configuration = sp.GetRequiredService<IConfiguration>(); // Get the configuration
-    return CreateBus(configuration); // Pass the configuration to CreateBus
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    return CreateBus(configuration); 
 });
 
 builder.Services.AddScoped<PostDbContext>();

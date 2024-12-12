@@ -16,4 +16,8 @@ public class MessagePublisher : IMessagePublisher
     {
         await _bus.PubSub.PublishAsync(message);
     }
+    public async Task PublishUserDeletedMessage(UserDeletedMessage message)
+    {
+        await _bus.PubSub.PublishAsync(message);
+    }
 }
